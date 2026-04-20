@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mon Lecteur">
+    
+    <title>Lecteur Multi-Albums PNL</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overscroll-behavior-y: none;
+        }
+
+        .player-container {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .info-lecture {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #nom-album-actif {
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 5px 0;
+        }
+
+        #titre-musique {
+            margin: 0;
+            color: #1db954;
+            font-size: 1.3rem;
+        }
+
+        audio {
+            width: 100%;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .playlist {
+            text-align: left;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Style de la barre de défilement */
+        .playlist::-webkit-scrollbar {
+            width: 6px;
+        }
+        .playlist::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        /* Titres des albums dans la liste */
+        .titre-album {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .titre-album:first-child {
+            margin-top: 0;
+        }
+
+        .playlist button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            background-color: transparent;
+            color: #ccc;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .playlist button:hover, .playlist button.actif {
+            background-color: #282828;
+            color: #1db954;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-container">
+    <div class="info-lecture">
+        <p id="nom-album-actif">Sélectionnez un album</p>
+        <h2 id="titre-musique">En attente de lecture...</h2>
+    </div>
+    
+    <audio id="lecteur" controls>
+        Votre navigateur ne supporte pas l'élément audio.
+    </audio>
+
+    <div class="playlist" id="conteneur-playlist">
+        </div>
+</div>
+
+<script>
+    const lecteur = document.getElementById('lecteur');
+    const titreMusique = document.getElementById('titre-musique');
+    const nomAlbumActif = document.getElementById('nom-album-actif');
+    const conteneurPlaylist = document.getElementById('conteneur-playlist');
+
+    // ==========================================
+    // CONFIGURATION DES ALBUMS
+    // Remplis les données ici avec les noms exacts de tes fichiers sur GitHub
+    // ==========================================
+    const discographie = [
+        {
+            nomAlbum: "Que la famille",
+            pistes: [
+                { titre: "Je vis, je visser", url: "nom-du-fichier-1.mp3" },
+                { titre: "Lala", url: "nom-du-fichier-2.mp3" },
+                { titre: "Différents", url: "nom-du-fichier-3.mp3" }
+            ]
+        },
+        {
+            nomAlbum: "Le Monde Chico",
+            pistes: [
+                { titre: "Oh lala", url: "nom-du-fichier-4.mp3" },
+                { titre: "Dans la soucoupe", url: "nom-du-fichier-5.mp3" },
+                { titre: "Abonné", url: "nom-du-fichier-6.mp3" }
+            ]
+        },
+        {
+            nomAlbum: "Dans la légende",
+            pistes: [
+                { titre: "DA", url: "nom-du-fichier-7.mp3" },
+                { titre: "Naha", url: "nom-du-fichier-8.mp3" },
+                { titre: "J'suis QLF", url: "nom-du-fichier-9.mp3" }
+            ]
+        }
+    ];
+
+    // Variables pour garder une trace des boutons
+    let tousLesBoutons = [];
+
+    function jouerMusique(url, titre, nomAlbum, boutonElement) {
+        lecteur.src = url;
+        titreMusique.innerText = titre;
+        nomAlbumActif.innerText = nomAlbum;
+        lecteur.play();
+
+        // Réinitialiser le style de tous les boutons
+        tousLesBoutons.forEach(btn => btn.classList.remove('actif'));
+        // Ajouter le style "actif" au bouton cliqué
+        boutonElement.classList.add('actif');
+    }
+
+    // Génération automatique de l'interface
+    discographie.forEach(album => {
+        // Créer le titre de l'album
+        const titreSection = document.createElement('h3');
+        titreSection.className = 'titre-album';
+        titreSection.innerText = album.nomAlbum;
+        conteneurPlaylist.appendChild(titreSection);
+
+        // Créer les boutons pour chaque piste de cet album
+        album.pistes.forEach(piste => {
+            const bouton = document.createElement('button');
+            bouton.innerText = piste.titre;
+            
+            bouton.onclick = function() {
+                jouerMusique(piste.url, piste.titre, album.nomAlbum, bouton);
+            };
+            
+            tousLesBoutons.push(bouton);
+            conteneurPlaylist.appendChild(bouton);
+        });
+    });
+
+    // Passer automatiquement à la musique suivante à la fin d'une piste
+    lecteur.addEventListener('ended', function() {
+        // Trouver l'index du bouton actuellement actif
+        const indexActuel = tousLesBoutons.findIndex(btn => btn.classList.contains('actif'));
+        
+        // S'il y a une piste suivante, on simule un clic dessus
+        if (indexActuel !== -1 && indexActuel < tousLesBoutons.length - 1) {
+            tousLesBoutons[indexActuel + 1].click();
+        }
+    });
+
+</script>
+
+</body>
+</html>
